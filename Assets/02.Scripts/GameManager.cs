@@ -123,7 +123,7 @@ public class GameManager : Singleton<GameManager>
                 {
                     
                     //CheckGameResult()를 호출하여 승리, 패배, 무승부 확인
-                    var gameResult = CheckGameResult();
+                    var gameResult = CheckGameResult(PlayerType.Black);
                         
                     //결과가 NONE(결과안나옴)이라면
                     if (gameResult == GameResult.None)
@@ -152,7 +152,7 @@ public class GameManager : Singleton<GameManager>
             {
                 if (SetNewBoardValue(PlayerType.White, _lastPos[0], _lastPos[1]))
                 {
-                    var gameResult = CheckGameResult();
+                    var gameResult = CheckGameResult(PlayerType.White);
                     if (gameResult == GameResult.None)
                     {
                         //금수 배치
@@ -250,13 +250,19 @@ public class GameManager : Singleton<GameManager>
     /// 게임 결과 확인 함수
     /// </summary>
     /// <returns>플레이어 기준 게임 결과</returns>
-    private GameResult CheckGameResult()
+    private GameResult CheckGameResult(PlayerType playerType)
     {
-    	//흑돌이 이겼다면 Win 반환
-        if (CheckGameWin(PlayerType.Black)) { return GameResult.Win; }
-        
-        //백돌이 이겼다면 Lose 반환
-        if (CheckGameWin(PlayerType.White)) { return GameResult.Lose; }
+        if (playerType == PlayerType.Black)
+        {
+            //흑돌이 이겼다면 Win 반환
+            if (CheckGameWin(PlayerType.Black)) { return GameResult.Win; }
+        }
+
+        if (playerType == PlayerType.White)
+        {
+            //백돌이 이겼다면 Lose 반환
+            if (CheckGameWin(PlayerType.White)) { return GameResult.Lose; }
+        }
         
         //모든 칸이 채워졌다면 Draw 반환
         if (IsAllBlocksPlaced()) { return GameResult.Draw; }
@@ -478,144 +484,313 @@ public class GameManager : Singleton<GameManager>
     //4-4금수 메서드 (미구현)
     private bool ISFourFour(int row, int col)
     {
-        // // 검사할 방향 (가로, 세로, 대각선, 중복 금수때문에 반대방향 포함)
-        // int[] dx = { 1, 0, 1, 1, -1, 0, -1, -1 };
-        // int[] dy = { 0, 1, 1, -1, 0, -1, -1, 1 };
-        //
-        // int fourcount = 0; // 4칸 줄 개수
-        //
-        // // 4가지 방향 탐색
-        // for (int i = 0; i < dx.Length; i++)
-        // {
-        //     
-        //     int count = 1;  // 현재 착수한 돌 포함
-        //     int nonecount = 0; // 띈 칸 개수
-        //
-        //     // 정방향 검사 (최대 4칸)
-        //     for (int step = 1; step < 5; step++)
-        //     {
-        //         int newRow = row + dx[i] * step;
-        //         int newCol = col + dy[i] * step;
-        //         
-        //         if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
-        //             break;
-        //
-        //         if (_board[newRow, newCol] == PlayerType.Black)
-        //         {
-        //             count++;
-        //         }
-        //         else if (_board[newRow, newCol] != PlayerType.White)
-        //         {
-        //             nonecount++;
-        //             if (nonecount >= 2)
-        //                 break;
-        //         }
-        //         
-        //         else
-        //             break;
-        //     }
-        //     
-        //     // 4개 연속 (공백 1개 포함 가능) → 4줄 카운트 증가
-        //     if (count >= 4)
-        //         fourcount++;
-        //
-        //     else if (count != 1)
-        //     {
-        //         // 역방향 검사 (최대 4칸)를 하되 바로 반대로 돌아온 경우는 패스한다.
-        //         for (int step = 1; step < 5; step++)
-        //         {
-        //             int newRow = row - dx[i] * step;
-        //             int newCol = col - dy[i] * step;
-        //
-        //             if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
-        //                 break;
-        //
-        //             if (_board[newRow, newCol] == PlayerType.Black)
-        //                 count++;
-        //         
-        //             else if (_board[newRow, newCol] != PlayerType.White)
-        //             {
-        //                 nonecount++;
-        //                 if (nonecount >= 3)
-        //                     break;
-        //             }
-        //         
-        //             else
-        //                 break;
-        //         }
-        //         
-        //         if (count >= 4)
-        //             fourcount++;
-        //     }
-        //     
-        //     
-        //     // 4-4 판정되면 즉시 종료
-        //     if (fourcount >= 2)
-        //         return true;
-        // }
-        //
-        // // 테스트 종료
+        // 검사할 방향 (가로, 세로, 대각선)
+        int[] dx = { 1, 0, 1, 1 };
+        int[] dy = { 0, 1, 1, -1 };
+        
+        int fourcount = 0; // 4칸 줄 개수
+        
+        // 4가지 방향 탐색
+        for (int i = 0; i < dx.Length; i++)
+        {
+            
+            int count = 1;  // 현재 착수한 돌 포함
+            int nonecount = 0; // 띈 칸 개수
+            
+            // 정방향 검사 (최대 4칸)
+            for (int step = 1; step < 5; step++)
+            {
+                int newRow = row + dx[i] * step;
+                int newCol = col + dy[i] * step;
+
+
+                if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
+                {
+                    nonecount++;
+                    break;
+                }
+        
+                if (_board[newRow, newCol] == PlayerType.Black)
+                {
+                    count++;
+                }
+                else if (_board[newRow, newCol] == PlayerType.None)
+                {
+                    nonecount++;
+                    if (nonecount >= 2)
+                        break;
+                }
+                else
+                {
+                    nonecount++;
+                    break;
+                }
+            }
+
+            nonecount = 0;
+            //역방향 검사
+            for (int step = 1; step < 5; step++)
+            {
+                int newRow = row - dx[i] * step;
+                int newCol = col - dy[i] * step;
+                
+                if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
+                {
+                    nonecount++;
+                    break;
+                }
+        
+                if (_board[newRow, newCol] == PlayerType.Black)
+                {
+                    count++;
+                }
+                else if (_board[newRow, newCol] == PlayerType.None)
+                {
+                    nonecount++;
+                    if (nonecount >= 3)
+                        break;
+                }
+                else
+                {
+                    nonecount++;
+                    break;
+                }
+            }
+
+            if (count == 4)
+                fourcount++;
+            
+            
+            // 4-4 판정되면 즉시 종료
+            if (fourcount >= 2)
+                return true;
+        }
+        
+        //예외 44패턴 판별(한줄에 쌍4가 성립되는 경우)
+        //임시 착수
+        _board[row, col] = PlayerType.Black;
+        
+        List<PlayerType> rowList = GetRow(row);
+        List<PlayerType> colList = GetColumn(col);
+        List<PlayerType> diag1List = GetDiagonal1(row, col);
+        List<PlayerType> diag2List = GetDiagonal2(row, col);
+        
+        List<PlayerType> exceptionfourfour1 = new List<PlayerType> { PlayerType.Black, PlayerType.Black, PlayerType.None, PlayerType.Black, PlayerType.Black, PlayerType.None, PlayerType.Black, PlayerType.Black };
+        List<PlayerType> exceptionfourfour2 = new List<PlayerType> { PlayerType.Black, PlayerType.None, PlayerType.Black, PlayerType.Black, PlayerType.Black, PlayerType.None, PlayerType.Black };
+
+        if (CheckExceptionPatterns(rowList, exceptionfourfour1, exceptionfourfour2))
+        {
+            //임시 착수 해제
+            _board[row, col] = PlayerType.None;
+            return true;
+        }
+            
+        if (CheckExceptionPatterns(colList, exceptionfourfour1, exceptionfourfour2))
+        {
+            //임시 착수 해제
+            _board[row, col] = PlayerType.None;
+            return true;
+        }
+        
+        if (CheckExceptionPatterns(diag1List, exceptionfourfour1, exceptionfourfour2))
+        {
+            //임시 착수 해제
+            _board[row, col] = PlayerType.None;
+            return true;
+        }
+        
+        if (CheckExceptionPatterns(diag2List, exceptionfourfour1, exceptionfourfour2))
+        {
+            //임시 착수 해제
+            _board[row, col] = PlayerType.None;
+            return true;
+        }
+        
+        List<PlayerType> GetRow(int row)
+        {
+            List<PlayerType> result = new List<PlayerType>();
+            for (int col = 0; col < 15; col++)
+            {
+                result.Add(_board[row, col]);
+            }
+            return result;
+        }
+
+        List<PlayerType> GetColumn(int col)
+        {
+            List<PlayerType> result = new List<PlayerType>();
+            for (int row = 0; row < 15; row++)
+            {
+                result.Add(_board[row, col]);
+            }
+            return result;
+        }
+
+        List<PlayerType> GetDiagonal1(int row, int col) // ↘ 방향 (왼쪽 위 ↔ 오른쪽 아래)
+        {
+            List<PlayerType> result = new List<PlayerType>();
+            int r = row, c = col;
+            while (r > 0 && c > 0) { r--; c--; } // 대각선 시작점 찾기
+            while (r < 15 && c < 15) { result.Add(_board[r, c]); r++; c++; }
+            return result;
+        }
+
+        List<PlayerType> GetDiagonal2(int row, int col) // ↙ 방향 (오른쪽 위 ↔ 왼쪽 아래)
+        {
+            List<PlayerType> result = new List<PlayerType>();
+            int r = row, c = col;
+            while (r > 0 && c < 14) { r--; c++; } // 대각선 시작점 찾기
+            while (r < 15 && c >= 0) { result.Add(_board[r, c]); r++; c--; }
+            return result;
+        }
+        
+        bool ContainsPattern(List<PlayerType> list, List<PlayerType> pattern)
+        {
+            if (list.Count < pattern.Count) return false;
+
+            for (int i = 0; i <= list.Count - pattern.Count; i++)
+            {
+                bool match = true;
+                for (int j = 0; j < pattern.Count; j++)
+                {
+                    if (list[i + j] != pattern[j])
+                    {
+                        match = false;
+                        break;
+                    }
+                }
+                if (match) return true;
+            }
+            return false;
+        }
+        
+        bool CheckExceptionPatterns(List<PlayerType> list, List<PlayerType> pattern1, List<PlayerType> pattern2)
+        {
+            if (ContainsPattern(list, pattern1))
+            {
+                return true;
+            }
+            if (ContainsPattern(list, pattern2))
+            {
+                return true;
+            }
+            
+            return false;
+        }
+        
+        _board[row, col] = PlayerType.None;
         return false;
     }
 
-    //3-3금수 메서드(미구현)
+    //3-3금수 메서드
     private bool IsThreeThree(int row, int col)
     {
-        // // 검사할 방향 (가로, 세로, 대각선)
-        // int[] dx = { 1, 0, 1, 1 };
-        // int[] dy = { 0, 1, 1, -1 };
-        //
-        // int threecount = 0;
-        //
-        // // 방향 탐색
-        // for (int i = 0; i < dx.Length; i++)
-        // {
-        //     int count = 1;  // 현재 착수한 돌 포함
-        //
-        //     // 한 방향으로 2칸 이동하면서 검사
-        //     for (int step = 1; step < 3; step++)
-        //     {
-        //         int newRow = row + dx[i] * step;
-        //         int newCol = col + dy[i] * step;
-        //
-        //         // 보드 범위 초과 시 중단
-        //         if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
-        //             break;
-        //
-        //         // 열린곳 탐지후 역방향 탐색
-        //         if (_board[newRow, newCol] == PlayerType.None)
-        //         {
-        //             for (int backstep = 1; backstep < 3; backstep++)
-        //             {
-        //                 int newnewRow = newRow - dx[i] * backstep;
-        //                 int newnewCol = newCol - dy[i] * backstep;
-        //
-        //                 // 보드 범위 초과 시 중단
-        //                 if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
-        //                     break;
-        //
-        //                 // 같은 플레이어 돌이면 카운트 증가
-        //                 if (_board[newnewRow, newnewCol] == PlayerType.Black)
-        //                 {
-        //                     count++;
-        //                     if (count >= 3)
-        //                     {
-        //                         if (_board[newnewRow - dx[i], newnewCol - dy[i]] == PlayerType.None)
-        //                             threecount++;
-        //                     }
-        //                 }
-        //                 else
-        //                     break;
-        //             }
-        //         }
-        //         else if (_board[newRow, newCol] == PlayerType.White)
-        //             break;
-        //     }
-        //     
-        //     if (threecount >= 2)
-        //         return true;
-        // }
-        //
+        // 검사할 방향 (가로, 세로, 대각선)
+        int[] dx = { 1, 0, 1, 1 };
+        int[] dy = { 0, 1, 1, -1 };
+        
+        int threecount = 0;
+        
+        // 방향 탐색
+        for (int i = 0; i < dx.Length; i++)
+        {
+            int count = 1;  // 현재 착수한 돌 포함
+            int nonecount = 0;
+            int whitecount = 0;
+            bool isfirst = false;
+        
+            // 한 방향으로 3칸 이동하면서 검사
+            for (int step = 1; step < 4; step++)
+            {
+                int newRow = row + dx[i] * step;
+                int newCol = col + dy[i] * step;
+        
+                // 보드 범위 초과 시 중단
+                if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
+                    break;
+                
+                if (_board[newRow, newCol] == PlayerType.Black)
+                {
+                    count++;
+                }
+                else if (_board[newRow, newCol] != PlayerType.White)
+                {
+                    nonecount++;
+                }
+                else if (_board[newRow, newCol] == PlayerType.White)
+                {
+                    whitecount++;
+                    break;
+                }
+                
+                
+                //4번째 칸이 백돌일 경우 추가 체크
+                if (step == 3)
+                {
+                    newRow = row + dx[i] * 4;
+                    newCol = col + dy[i] * 4;
+                    
+                    if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
+                        break;
+                    
+                    if (_board[newRow, newCol] == PlayerType.White)
+                        whitecount++;
+                    
+                    if (count == 2)
+                        isfirst = (_board[row + dx[i], col + dy[i]] == PlayerType.None) ? true : false;
+                }
+            }
+            
+            //역방향 탐색
+            for (int step = 1; step < 4; step++)
+            {
+                int newRow = row - dx[i] * step;
+                int newCol = col - dy[i] * step;
+        
+                // 보드 범위 초과 시 중단
+                if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
+                    break;
+                
+                if (_board[newRow, newCol] == PlayerType.Black)
+                {
+                    count++;
+                }
+                else if (_board[newRow, newCol] != PlayerType.White)
+                {
+                    nonecount++;
+                }
+                else if (_board[newRow, newCol] == PlayerType.White)
+                {
+                    whitecount++;
+                    break;
+                }
+                
+                        
+                //4번째 칸이 백돌이면 추가 체크
+                if (step == 3)
+                {
+                    newRow = row - dx[i] * 4;
+                    newCol = col - dy[i] * 4;
+                    
+                    if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
+                        break;
+                    
+                    if (_board[newRow, newCol] == PlayerType.White)
+                        whitecount++;
+                    
+                    if (isfirst == true)
+                        isfirst = (_board[row - dx[i], col - dy[i]] == PlayerType.None) ? true : false;
+                }
+            }
+            
+            //빈칸수가 백돌수보다 많아야하고, 정확하게 갯수가 3이며, 징검다리로 3칸이 완성된 경우가 아니여야함
+            if (nonecount >= whitecount && count == 3 && isfirst == false)
+                threecount++;
+            
+            if (threecount >= 2)
+                return true;
+        }
+        
         return false;
     }
     
@@ -709,10 +884,19 @@ public class GameManager : Singleton<GameManager>
 
     public void BoardDebug()
     {
-        foreach (var pos in banposQueue)
+        string boardString = "\n";
+        
+        for (int r = 0; r < 15; r++)
         {
-            Debug.Log($"{pos[0]}, {pos[1]}");
+            for (int c = 0; c < 15; c++)
+            {
+                boardString += (_board[r, c] == PlayerType.Black ? "흑" : _board[r, c] == PlayerType.White ? "백" : _board[r, c] == PlayerType.None ? "ㅇ" : "금") + " ";
+            }
+            boardString += "\n";
         }
+        
+        Debug.Log($"최근 착수지점: {_lastPos[0]}, {_lastPos[1]}");
+        Debug.Log("Board State:\n" + boardString);
     }
     
     protected override void OnSceneLoaded(Scene scene, LoadSceneMode mode)
