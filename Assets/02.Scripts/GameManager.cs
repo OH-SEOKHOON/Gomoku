@@ -52,6 +52,10 @@ public class GameManager : Singleton<GameManager>
     
     //금수지점을 저장할 큐
     private Queue<int[]> banposQueue = new Queue<int[]>();
+    
+    //탐색할 방향 (가로, 세로, 대각선)
+    private int[] dx = { 1, -1, 0, 0, 1, -1, 1, -1 };
+    private int[] dy = { 0, 0, 1, -1, 1, -1, -1, 1 };
 
     private void Start()
     {
@@ -123,13 +127,13 @@ public class GameManager : Singleton<GameManager>
                 {
                     
                     //CheckGameResult()를 호출하여 승리, 패배, 무승부 확인
-                    var gameResult = CheckGameResult(PlayerType.Black);
+                    var gameResult = CheckGameResult(_lastPos[0], _lastPos[1], PlayerType.Black);
                         
                     //결과가 NONE(결과안나옴)이라면
                     if (gameResult == GameResult.None)
                     {
                         //금수 테스트
-                        Renju();
+                        Renju(_lastPos[0], _lastPos[1], PlayerType.Black);
                         
                         //금수 배치 해제
                         ReplacedBan();
@@ -152,7 +156,8 @@ public class GameManager : Singleton<GameManager>
             {
                 if (SetNewBoardValue(PlayerType.White, _lastPos[0], _lastPos[1]))
                 {
-                    var gameResult = CheckGameResult(PlayerType.White);
+                    var gameResult = CheckGameResult(_lastPos[0], _lastPos[1], PlayerType.White);
+                    
                     if (gameResult == GameResult.None)
                     {
                         //금수 배치
@@ -250,18 +255,18 @@ public class GameManager : Singleton<GameManager>
     /// 게임 결과 확인 함수
     /// </summary>
     /// <returns>플레이어 기준 게임 결과</returns>
-    private GameResult CheckGameResult(PlayerType playerType)
+    private GameResult CheckGameResult(int row, int col, PlayerType playerType)
     {
         if (playerType == PlayerType.Black)
         {
             //흑돌이 이겼다면 Win 반환
-            if (CheckGameWin(PlayerType.Black)) { return GameResult.Win; }
+            if (ISFive(row, col, PlayerType.Black)) { return GameResult.Win; }
         }
 
         if (playerType == PlayerType.White)
         {
             //백돌이 이겼다면 Lose 반환
-            if (CheckGameWin(PlayerType.White)) { return GameResult.Lose; }
+            if (ISFive(row, col, PlayerType.White)) { return GameResult.Lose; }
         }
         
         //모든 칸이 채워졌다면 Draw 반환
@@ -269,64 +274,6 @@ public class GameManager : Singleton<GameManager>
         
         //다 아니라면 계속 게임진행중이라고 판단
         return GameResult.None;
-    }
-    
-    //게임의 승패를 판단하는 함수
-    private bool CheckGameWin(PlayerType playerType)
-    {
-        // 검사할 방향 (가로, 세로, 대각선)
-        int[] dx = { 1, 0, 1, 1 };
-        int[] dy = { 0, 1, 1, -1 };
-
-        // 마지막 착수 위치
-        int startRow = _lastPlacedPos[0];
-        int startCol = _lastPlacedPos[1];
-
-        // 방향 탐색
-        for (int i = 0; i < dx.Length; i++)
-        {
-            int count = 1;  // 현재 착수한 돌 포함
-
-            // 한 방향으로 4칸 이동하면서 검사
-            for (int step = 1; step < 5; step++)
-            {
-                int newRow = startRow + dx[i] * step;
-                int newCol = startCol + dy[i] * step;
-
-                // 보드 범위 초과 시 중단
-                if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
-                    break;
-
-                // 같은 플레이어 돌이면 카운트 증가
-                if (_board[newRow, newCol] == playerType)
-                    count++;
-                else
-                    break;
-            }
-            
-            // 반대방향으로도 4칸 이동하면서 검사
-            for (int step = 1; step < 5; step++)
-            {
-                int newRow = startRow - dx[i] * step;
-                int newCol = startCol - dy[i] * step;
-
-                // 보드 범위 초과 시 중단
-                if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
-                    break;
-
-                // 같은 플레이어 돌이면 카운트 증가
-                if (_board[newRow, newCol] == playerType)
-                    count++;
-                else
-                    break;
-            }
-            
-            // 5개 연속이면 승리
-            if (count >= 5)
-                return true;
-        }
-
-        return false;
     }
     
     /// <summary>
@@ -347,450 +294,265 @@ public class GameManager : Singleton<GameManager>
         }
         return true;
     }
-
-    private void Renju()
+    
+    //보드범위체크 메서드
+    private bool CheckBoardRange(int row, int col)
     {
-        Debug.Log("금수테스트 시작");
-        
-        // 검사할 방향 (가로, 세로, 대각선)
-        int[] dx = { 1, 0, 1, 1};
-        int[] dy = { 0, 1, 1, -1};
+        return (row < 0 || row >= 15 || col < 0 || col >= 15);
+    }
+    
+    
+    //돌을 세는 메서드
+    private int GetCountStone(int row, int col, PlayerType playerType, int direction)
+    {
+        int count = 1;
 
-        // 마지막 착수 위치
-        int startRow = _lastPlacedPos[0];
-        int startCol = _lastPlacedPos[1];
-
-        // 8방향 탐색
-        for (int i = 0; i < dx.Length; i++)
+        for (int i = 0; i < 2; i++)
         {
-            for (int step = 1; step < 5; step++) // 최대 4칸까지 탐색
-            {
-                int newRow = startRow + dx[i] * step;
-                int newCol = startCol + dy[i] * step;
-
-                // 보드 범위 초과 시 중단
-                if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
-                    break;
-
-                // 빈 칸이면 검사
-                if (_board[newRow, newCol] == PlayerType.None)
-                {
-                    if (ISSix(newRow, newCol))
-                    {
-                        banposQueue.Enqueue(new int[] {newRow, newCol});
-                        Debug.Log($"{newRow}, {newCol} 장목금수추가");
-                    }
-                    else if (ISFourFour(newRow, newCol))
-                    {
-                        banposQueue.Enqueue(new int[] {newRow, newCol});
-                        Debug.Log($"{newRow}, {newCol} 4-4금수추가");
-                    }
-                    else if (IsThreeThree(newRow, newCol))
-                    {
-                        banposQueue.Enqueue(new int[] {newRow, newCol});
-                        Debug.Log($"{newRow}, {newCol} 3-3금수추가");
-                    }
-                }
-            }
+            int dirx = dx[direction * 2 + i];
+            int diry = dy[direction * 2 + i];
             
-            for (int step = 1; step < 5; step++) // 반대 4칸까지 탐색
+            int newRow = row;
+            int newCol = col;
+            
+            while (true)
             {
-                int newRow = startRow - dx[i] * step;
-                int newCol = startCol - dy[i] * step;
+                newRow += diry;
+                newCol += dirx;
+                
 
-                // 보드 범위 초과 시 중단
-                if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
+                if (CheckBoardRange(newRow, newCol) || _board[newRow, newCol] != playerType)
                     break;
+                
+                count++;
+            }
+        }
+        return count;
+    }
 
-                // 빈 칸이면 검사
+    //금수 확인 메서드
+    private void Renju(int row, int col, PlayerType playerType)
+    {
+        for (int i = 0; i < 8; i++)
+        {
+            int dirx = dx[i];
+            int diry = dy[i];
+            
+            for (int step = 1; step < 5; step++)
+            {
+                int newRow = row + diry * step;
+                int newCol = col + dirx * step;
+                
+                if (CheckBoardRange(newRow, newCol))
+                    break;
+                
+                int[] newPos = { newRow, newCol };
+
                 if (_board[newRow, newCol] == PlayerType.None)
                 {
-                    if (ISSix(newRow, newCol))
+                    if (ISSix(newRow, newCol, playerType))
                     {
-                        banposQueue.Enqueue(new int[] {newRow, newCol});
-                        Debug.Log($"{newRow}, {newCol} 장목금수추가");
+                        Debug.Log("장목금수 추가");
+                        banposQueue.Enqueue(newPos);
                     }
-                    else if (ISFourFour(newRow, newCol))
+                    else if (ISDoubleThree(newRow, newCol, playerType))
                     {
-                        banposQueue.Enqueue(new int[] {newRow, newCol});
-                        Debug.Log($"{newRow}, {newCol} 4-4금수추가");
+                        Debug.Log("3-3 금수 추가");
+                        banposQueue.Enqueue(newPos);
                     }
-                    else if (IsThreeThree(newRow, newCol))
+                    else if (ISDoubleFour(newRow, newCol, playerType))
                     {
-                        banposQueue.Enqueue(new int[] {newRow, newCol});
-                        Debug.Log($"{newRow}, {newCol} 3-3금수추가");
+                        Debug.Log("4-4 금수 추가");
+                        banposQueue.Enqueue(newPos);
                     }
                 }
             }
         }
     }
-
-    private bool ISSix(int row, int col)
+    
+    //금수 시뮬레이션 메서드
+    private bool TestRenju(int row, int col, PlayerType playerType)
     {
-        // 검사할 방향 (가로, 세로, 대각선)
-        int[] dx = { 1, 0, 1, 1 };
-        int[] dy = { 0, 1, 1, -1 };
+        if (ISFive(row, col, playerType))
+            return false;
         
-        // 방향 탐색
-        for (int i = 0; i < dx.Length; i++)
-        {
-            int count = 1;  // 현재 착수한 돌 포함
-
-            // 한 방향으로 5칸 이동하면서 검사
-            for (int step = 1; step < 6; step++)
-            {
-                int newRow = row + dx[i] * step;
-                int newCol = col + dy[i] * step;
-
-                // 보드 범위 초과 시 중단
-                if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
-                    break;
-
-                // 흑돌이면 카운트 증가
-                if (_board[newRow, newCol] == PlayerType.Black)
-                {
-                    count++;
-                }
-                else
-                    break;
-            }
-            
-            // 반대방향으로도 5칸 이동하면서 검사
-            for (int step = 1; step < 6; step++)
-            {
-                int newRow = row - dx[i] * step;
-                int newCol = col - dy[i] * step;
-
-                // 보드 범위 초과 시 중단
-                if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
-                    break;
-
-                // 흑돌이면 카운트 증가
-                if (_board[newRow, newCol] == PlayerType.Black)
-                {
-                    count++;
-                }
-                else
-                    break;
-            }
-            // 6개 연속이면 금수
-            if (count >= 6)
-                return true;
-        }
+        if (ISSix(row, col, playerType))
+            return true;
+        
+        if (ISDoubleThree(row, col, playerType))
+            return true;
+        
+        if (ISDoubleFour(row, col, playerType))
+            return true;
         
         return false;
     }
-
-    //4-4금수 메서드 (미구현)
-    private bool ISFourFour(int row, int col)
+    
+    //게임의 승패를 판단하는 메서드 (돌 5섯개를 검사)
+    private bool ISFive(int row, int col, PlayerType playerType)
     {
-        // 검사할 방향 (가로, 세로, 대각선)
-        int[] dx = { 1, 0, 1, 1 };
-        int[] dy = { 0, 1, 1, -1 };
-        
-        int fourcount = 0; // 4칸 줄 개수
-        
-        // 4가지 방향 탐색
-        for (int i = 0; i < dx.Length; i++)
+        for (int i = 0; i < 4; i++)
         {
+            int count = GetCountStone(row, col, playerType, i);
+            if (count == 5) { return true; }
+        }
+        return false;
+    }
+    
+    //장목 판단 메서드
+    private bool ISSix(int row, int col, PlayerType playerType)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            int count = GetCountStone(row, col, playerType, i);
+            if (count >= 6) { return true; }
+        }
+        return false;
+    }
+
+    private int[] FindEmptyPos(int row, int col, PlayerType playerType, int direction)
+    {
+        int dirx = dx[direction];
+        int diry = dy[direction];
+
+        int newRow = row;
+        int newCol = col;
             
-            int count = 1;  // 현재 착수한 돌 포함
-            int nonecount = 0; // 띈 칸 개수
+        while (true)
+        {
+            newRow += diry;
+            newCol += dirx;
             
-            // 정방향 검사 (최대 4칸)
-            for (int step = 1; step < 5; step++)
+            if (CheckBoardRange(newRow, newCol) || _board[newRow, newCol] != playerType)
+                break;
+        }
+
+        // 범위 내에서 비어 있지 않은 곳을 찾으면 해당 위치 반환
+        if (!CheckBoardRange(newRow, newCol) && _board[newRow, newCol] == PlayerType.None)
+            return new[] { newRow, newCol };
+        
+        return null;
+    }
+
+    private bool ISOpenThree(int row, int col, PlayerType playerType, int direction)
+    {
+        for (int i = 0; i < 2; i++)
+        {
+            int[] Emptypos = FindEmptyPos(row, col, playerType, direction * 2 + i);
+
+            if (Emptypos != null)
             {
-                int newRow = row + dx[i] * step;
-                int newCol = col + dy[i] * step;
+                _board[Emptypos[0], Emptypos[1]] = PlayerType.Black;
 
-
-                if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
+                if (CountOpenFour(Emptypos[0], Emptypos[1], playerType, direction) == 1)
                 {
-                    nonecount++;
-                    break;
-                }
-        
-                if (_board[newRow, newCol] == PlayerType.Black)
-                {
-                    count++;
-                }
-                else if (_board[newRow, newCol] == PlayerType.None)
-                {
-                    nonecount++;
-                    if (nonecount >= 2)
-                        break;
-                }
-                else
-                {
-                    nonecount++;
-                    break;
-                }
-            }
-
-            nonecount = 0;
-            //역방향 검사
-            for (int step = 1; step < 5; step++)
-            {
-                int newRow = row - dx[i] * step;
-                int newCol = col - dy[i] * step;
-                
-                if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
-                {
-                    nonecount++;
-                    break;
-                }
-        
-                if (_board[newRow, newCol] == PlayerType.Black)
-                {
-                    count++;
-                }
-                else if (_board[newRow, newCol] == PlayerType.None)
-                {
-                    nonecount++;
-                    if (nonecount >= 3)
-                        break;
-                }
-                else
-                {
-                    nonecount++;
-                    break;
-                }
-            }
-
-            if (count == 4)
-                fourcount++;
-            
-            
-            // 4-4 판정되면 즉시 종료
-            if (fourcount >= 2)
-                return true;
-        }
-        
-        //예외 44패턴 판별(한줄에 쌍4가 성립되는 경우)
-        //임시 착수
-        _board[row, col] = PlayerType.Black;
-        
-        List<PlayerType> rowList = GetRow(row);
-        List<PlayerType> colList = GetColumn(col);
-        List<PlayerType> diag1List = GetDiagonal1(row, col);
-        List<PlayerType> diag2List = GetDiagonal2(row, col);
-        
-        List<PlayerType> exceptionfourfour1 = new List<PlayerType> { PlayerType.Black, PlayerType.Black, PlayerType.None, PlayerType.Black, PlayerType.Black, PlayerType.None, PlayerType.Black, PlayerType.Black };
-        List<PlayerType> exceptionfourfour2 = new List<PlayerType> { PlayerType.Black, PlayerType.None, PlayerType.Black, PlayerType.Black, PlayerType.Black, PlayerType.None, PlayerType.Black };
-
-        if (CheckExceptionPatterns(rowList, exceptionfourfour1, exceptionfourfour2))
-        {
-            //임시 착수 해제
-            _board[row, col] = PlayerType.None;
-            return true;
-        }
-            
-        if (CheckExceptionPatterns(colList, exceptionfourfour1, exceptionfourfour2))
-        {
-            //임시 착수 해제
-            _board[row, col] = PlayerType.None;
-            return true;
-        }
-        
-        if (CheckExceptionPatterns(diag1List, exceptionfourfour1, exceptionfourfour2))
-        {
-            //임시 착수 해제
-            _board[row, col] = PlayerType.None;
-            return true;
-        }
-        
-        if (CheckExceptionPatterns(diag2List, exceptionfourfour1, exceptionfourfour2))
-        {
-            //임시 착수 해제
-            _board[row, col] = PlayerType.None;
-            return true;
-        }
-        
-        List<PlayerType> GetRow(int row)
-        {
-            List<PlayerType> result = new List<PlayerType>();
-            for (int col = 0; col < 15; col++)
-            {
-                result.Add(_board[row, col]);
-            }
-            return result;
-        }
-
-        List<PlayerType> GetColumn(int col)
-        {
-            List<PlayerType> result = new List<PlayerType>();
-            for (int row = 0; row < 15; row++)
-            {
-                result.Add(_board[row, col]);
-            }
-            return result;
-        }
-
-        List<PlayerType> GetDiagonal1(int row, int col) // ↘ 방향 (왼쪽 위 ↔ 오른쪽 아래)
-        {
-            List<PlayerType> result = new List<PlayerType>();
-            int r = row, c = col;
-            while (r > 0 && c > 0) { r--; c--; } // 대각선 시작점 찾기
-            while (r < 15 && c < 15) { result.Add(_board[r, c]); r++; c++; }
-            return result;
-        }
-
-        List<PlayerType> GetDiagonal2(int row, int col) // ↙ 방향 (오른쪽 위 ↔ 왼쪽 아래)
-        {
-            List<PlayerType> result = new List<PlayerType>();
-            int r = row, c = col;
-            while (r > 0 && c < 14) { r--; c++; } // 대각선 시작점 찾기
-            while (r < 15 && c >= 0) { result.Add(_board[r, c]); r++; c--; }
-            return result;
-        }
-        
-        bool ContainsPattern(List<PlayerType> list, List<PlayerType> pattern)
-        {
-            if (list.Count < pattern.Count) return false;
-
-            for (int i = 0; i <= list.Count - pattern.Count; i++)
-            {
-                bool match = true;
-                for (int j = 0; j < pattern.Count; j++)
-                {
-                    if (list[i + j] != pattern[j])
+                    if (!TestRenju(Emptypos[0], Emptypos[1], playerType))
                     {
-                        match = false;
-                        break;
+                        _board[Emptypos[0], Emptypos[1]] = PlayerType.None;
+                        return true;
                     }
                 }
-                if (match) return true;
+                
+                _board[Emptypos[0], Emptypos[1]] = PlayerType.None;
             }
-            return false;
         }
+        return false;
+    }
+    
+    private int CountOpenFour(int row, int col, PlayerType playerType, int direction)
+    {
+        if (ISFive(row, col, playerType))
+            return -1;
         
-        bool CheckExceptionPatterns(List<PlayerType> list, List<PlayerType> pattern1, List<PlayerType> pattern2)
+        int count = 0;
+        
+        for (int i = 0; i < 2; i++)
         {
-            if (ContainsPattern(list, pattern1))
+            int[] Emptypos = FindEmptyPos(row, col, playerType, direction * 2 + i);
+
+            if (Emptypos != null)
             {
-                return true;
+                if (ISFive(Emptypos[0], Emptypos[1], playerType))
+                {
+                    count++;
+                }
             }
-            if (ContainsPattern(list, pattern2))
-            {
-                return true;
-            }
-            
-            return false;
+        }
+
+        if (count == 2)
+        {
+            if (GetCountStone(row, col, playerType, direction) == 4)
+                count = 1;
+        }
+        else
+            count = 0;
+        
+        return count;
+    }
+
+    private bool ISDoubleThree(int row, int col, PlayerType playerType)
+    {
+        int count = 0;
+        
+        _board[row, col] = playerType;
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (ISOpenThree(row, col, playerType, i))
+                count++;
         }
         
         _board[row, col] = PlayerType.None;
+        
+        if (count >= 2)
+            return true;
+        
         return false;
     }
 
-    //3-3금수 메서드
-    private bool IsThreeThree(int row, int col)
+    private bool ISDoubleFour(int row, int col, PlayerType playerType)
     {
-        // 검사할 방향 (가로, 세로, 대각선)
-        int[] dx = { 1, 0, 1, 1 };
-        int[] dy = { 0, 1, 1, -1 };
+        int count = 0;
         
-        int threecount = 0;
+        _board[row, col] = playerType;
         
-        // 방향 탐색
-        for (int i = 0; i < dx.Length; i++)
+        for (int i = 0; i < 4; i++)
         {
-            int count = 1;  // 현재 착수한 돌 포함
-            int nonecount = 0;
-            int whitecount = 0;
-            bool isfirst = false;
-        
-            // 한 방향으로 3칸 이동하면서 검사
-            for (int step = 1; step < 4; step++)
-            {
-                int newRow = row + dx[i] * step;
-                int newCol = col + dy[i] * step;
-        
-                // 보드 범위 초과 시 중단
-                if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
-                    break;
-                
-                if (_board[newRow, newCol] == PlayerType.Black)
-                {
-                    count++;
-                }
-                else if (_board[newRow, newCol] != PlayerType.White)
-                {
-                    nonecount++;
-                }
-                else if (_board[newRow, newCol] == PlayerType.White)
-                {
-                    whitecount++;
-                    break;
-                }
-                
-                
-                //4번째 칸이 백돌일 경우 추가 체크
-                if (step == 3)
-                {
-                    newRow = row + dx[i] * 4;
-                    newCol = col + dy[i] * 4;
-                    
-                    if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
-                        break;
-                    
-                    if (_board[newRow, newCol] == PlayerType.White)
-                        whitecount++;
-                    
-                    if (count == 2)
-                        isfirst = (_board[row + dx[i], col + dy[i]] == PlayerType.None) ? true : false;
-                }
-            }
-            
-            //역방향 탐색
-            for (int step = 1; step < 4; step++)
-            {
-                int newRow = row - dx[i] * step;
-                int newCol = col - dy[i] * step;
-        
-                // 보드 범위 초과 시 중단
-                if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
-                    break;
-                
-                if (_board[newRow, newCol] == PlayerType.Black)
-                {
-                    count++;
-                }
-                else if (_board[newRow, newCol] != PlayerType.White)
-                {
-                    nonecount++;
-                }
-                else if (_board[newRow, newCol] == PlayerType.White)
-                {
-                    whitecount++;
-                    break;
-                }
-                
-                        
-                //4번째 칸이 백돌이면 추가 체크
-                if (step == 3)
-                {
-                    newRow = row - dx[i] * 4;
-                    newCol = col - dy[i] * 4;
-                    
-                    if (newRow < 0 || newRow >= 15 || newCol < 0 || newCol >= 15)
-                        break;
-                    
-                    if (_board[newRow, newCol] == PlayerType.White)
-                        whitecount++;
-                    
-                    if (isfirst == true)
-                        isfirst = (_board[row - dx[i], col - dy[i]] == PlayerType.None) ? true : false;
-                }
-            }
-            
-            //빈칸수가 백돌수보다 많아야하고, 정확하게 갯수가 3이며, 징검다리로 3칸이 완성된 경우가 아니여야함
-            if (nonecount >= whitecount && count == 3 && isfirst == false)
-                threecount++;
-            
-            if (threecount >= 2)
-                return true;
+            if (CountOpenFour(row, col, playerType, i) == 2)
+                count += 2;
+            else if (ISFour(row, col, playerType, i))
+                count ++;
         }
         
+        _board[row, col] = PlayerType.None;
+        
+        if (count >= 2)
+            return true;
+        
+        return false;
+    }
+
+    private bool ISFour(int row, int col, PlayerType playerType, int direction)
+    {
+        for (int i = 0; i < 2; i++)
+        {
+            int[] Emptypos = FindEmptyPos(row, col, playerType, direction * 2 + i);
+
+            if (Emptypos != null)
+            {
+                if (ISFiveInDirection(Emptypos[0], Emptypos[1], playerType, direction))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private bool ISFiveInDirection(int row, int col, PlayerType playerType, int direction)
+    {
+        if (GetCountStone(row, col, playerType, direction) == 5)
+            return true;
         return false;
     }
     
@@ -807,31 +569,11 @@ public class GameManager : Singleton<GameManager>
             if (_board[current[0], current[1]] == PlayerType.None)
             {
                 //여전히 금수라면 금수 표시 후 임시큐에 삽입
-                if (ISSix(current[0], current[1]))
+                if (TestRenju(current[0], current[1], PlayerType.Black))
                 {
                     // 보드에 밴 마커 배치
                     _board[current[0], current[1]] = PlayerType.Ban;
-            
-                    // 밴 마커 표시
-                    blockController.PlaceMarker(Block.MarkerType.ban, current[0], current[1]);
-                
-                    tempqueue.Enqueue(new int[] {current[0], current[1]});
-                }
-                else if (ISFourFour(current[0], current[1]))
-                {
-                    // 보드에 밴 마커 배치
-                    _board[current[0], current[1]] = PlayerType.Ban;
-            
-                    // 밴 마커 표시
-                    blockController.PlaceMarker(Block.MarkerType.ban, current[0], current[1]);
-                
-                    tempqueue.Enqueue(new int[] {current[0], current[1]});
-                }
-                else if (IsThreeThree(current[0], current[1]))
-                {
-                    // 보드에 밴 마커 배치
-                    _board[current[0], current[1]] = PlayerType.Ban;
-            
+                    
                     // 밴 마커 표시
                     blockController.PlaceMarker(Block.MarkerType.ban, current[0], current[1]);
                 
@@ -839,7 +581,6 @@ public class GameManager : Singleton<GameManager>
                 }
             }
         }
-
         // 기존 큐를 새로운 큐로 교체
         banposQueue = tempqueue;
     }
