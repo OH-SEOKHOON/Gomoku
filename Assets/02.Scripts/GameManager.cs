@@ -9,19 +9,18 @@ using UnityEngine.SceneManagement;
 public class GameManager : Singleton<GameManager>
 {
 	//BlockController를 참조
-    [SerializeField] private BlockController blockController;
-
-	//게임 시작 시 표시될 시작 패널
-    [SerializeField] private GameObject startPanel;     // 임시 변수, 나중에 삭제 예정
+    private BlockController _blockController;
+    
+    private Canvas _canvas;
     
     //Player를 저장할 열거형(이넘)변수
-    private enum PlayerType { None, Black, White, Ban }
+    public enum PlayerType { None, Black, White, Ban }
     
     //조준점을 저장할 열거형 변수
-    private enum AimedType { None, Aimed };
+    public enum AimedType { None, Aimed };
     
     //최근 착수지점을 저장할 열거형 변수
-    private enum PlacedType { None, Placed };
+    public enum PlacedType { None, Placed };
     
     //오목 보드 배열
     private PlayerType[,] _board;
@@ -33,7 +32,7 @@ public class GameManager : Singleton<GameManager>
     private PlacedType[,] _placeboard;
     
     //현재 플레이어를 저장할 변수
-    private PlayerType _currentPlayer;
+    public PlayerType _currentPlayer;
     
     //현재 위치를 저장할 변수
     public int[] _lastPos = {-1, -1};
@@ -42,7 +41,7 @@ public class GameManager : Singleton<GameManager>
     public int[] _lastPlacedPos = {-1, -1};
 
 	//게임의 상태(진행 중, 승리, 패배, 무승부)를 나타내는 열거형
-    private enum GameResult
+    public enum GameResult
     {
         None,   // 게임 진행 중
         Win,    // 플레이어 승
@@ -56,17 +55,12 @@ public class GameManager : Singleton<GameManager>
     //탐색할 방향 (가로, 세로, 대각선)
     private int[] dx = { 1, -1, 0, 0, 1, -1, 1, -1 };
     private int[] dy = { 0, 0, 1, -1, 1, -1, -1, 1 };
-
-    private void Start()
-    {
-        // 게임 초기화
-        InitGame();
-    }
-
+    
+    
     /// <summary>
-    /// 게임 초기화 함수
+    /// 게임 시작
     /// </summary>
-    public void InitGame()
+    public void StartGame()
     {
         // 가상 보드들 초기화
         _board = new PlayerType[15, 15];
@@ -79,16 +73,7 @@ public class GameManager : Singleton<GameManager>
         banposQueue.Clear();
         
         // BlockController의 InitBlocks() 호출 → 블록들을 초기화하고 클릭 이벤트 설정
-        blockController.InitBlocks();
-    }
-
-    /// <summary>
-    /// 게임 시작
-    /// </summary>
-    public void StartGame()
-    {
-    	//startPanel을 비활성화하여 게임을 시작
-        startPanel.SetActive(false);        // TODO: 테스트 코드, 나중에 삭제 예정
+        _blockController.InitBlocks();
         
         //SetTurn(TurnType.흑돌) 호출 → 흑돌의 차례로 설정
         _currentPlayer = PlayerType.Black;
@@ -97,17 +82,17 @@ public class GameManager : Singleton<GameManager>
     
     private void SetPlaced()
     {
-        blockController.OnBlockClickedDelegate = (row, col) =>
+        _blockController.OnBlockClickedDelegate = (row, col) =>
         {
             // 기존 AIM을 지우기
             if (_lastPos[0] != -1 && _lastPos[1] != -1)
             {
-                blockController.PlaceAim(Block.AimType.None, _lastPos[0], _lastPos[1]);
+                _blockController.PlaceAim(Block.AimType.None, _lastPos[0], _lastPos[1]);
                 _aimboard[_lastPos[0], _lastPos[1]] = AimedType.None;
             }
         
             // 새로운 AIM 설정
-            blockController.PlaceAim(Block.AimType.Aimed, row, col);
+            _blockController.PlaceAim(Block.AimType.Aimed, row, col);
             _aimboard[row, col] = AimedType.Aimed;
 
             // 마지막 위치 업데이트
@@ -116,65 +101,6 @@ public class GameManager : Singleton<GameManager>
         };
     }
     
-    //착수 메서드
-    public void OnPlacedStone()
-    {
-        switch (_currentPlayer)
-        {
-            case PlayerType.Black:
-            {
-                if (SetNewBoardValue(PlayerType.Black, _lastPos[0], _lastPos[1]))
-                {
-                    
-                    //CheckGameResult()를 호출하여 승리, 패배, 무승부 확인
-                    var gameResult = CheckGameResult(_lastPos[0], _lastPos[1], PlayerType.Black);
-                        
-                    //결과가 NONE(결과안나옴)이라면
-                    if (gameResult == GameResult.None)
-                    {
-                        //금수 테스트
-                        Renju(_lastPos[0], _lastPos[1], PlayerType.Black);
-                        
-                        //금수 배치 해제
-                        ReplacedBan();
-                            
-                        //백돌턴으로 넘김
-                        _currentPlayer = PlayerType.White;
-                    }
-                    else
-                        //결과났으면 게임 종료 메서드 출력
-                        EndGame(gameResult);
-                }
-                else
-                {
-                    Debug.Log("이미 둔곳입니다");
-                }
-                break;
-            }
-
-            case PlayerType.White:
-            {
-                if (SetNewBoardValue(PlayerType.White, _lastPos[0], _lastPos[1]))
-                {
-                    var gameResult = CheckGameResult(_lastPos[0], _lastPos[1], PlayerType.White);
-                    
-                    if (gameResult == GameResult.None)
-                    {
-                        //금수 배치
-                        PlacedBan();
-                        _currentPlayer = PlayerType.Black;
-                    }
-                    else
-                        EndGame(gameResult);
-                }
-                else
-                {
-                    Debug.Log("이미 둔곳입니다");
-                }
-                break;
-            }
-        }
-    }
     
     /// <summary>
     /// _board에 새로운 값을 할당하는 함수
@@ -183,7 +109,7 @@ public class GameManager : Singleton<GameManager>
     /// <param name="row">Row</param>
     /// <param name="col">Col</param>
     /// <returns>False가 반환되면 할당할 수 없음, True는 할당이 완료됨</returns>
-    private bool SetNewBoardValue(PlayerType playerType, int row, int col)
+    public bool SetNewBoardValue(PlayerType playerType, int row, int col)
     {
         if (_board[row, col] != PlayerType.None)
             return false;
@@ -195,21 +121,21 @@ public class GameManager : Singleton<GameManager>
             _board[row, col] = playerType;
             
             // 흑돌 마커 표시
-            blockController.PlaceMarker(Block.MarkerType.black, row, col);
+            _blockController.PlaceMarker(Block.MarkerType.black, row, col);
             
             //에임 지우기
-            blockController.PlaceAim(Block.AimType.None, row, col);
+            _blockController.PlaceAim(Block.AimType.None, row, col);
             _aimboard[row, col] = AimedType.None;
             
             // 기존 최근 착수지점을 지우기
             if (_lastPlacedPos[0] != -1 && _lastPlacedPos[1] != -1)
             {
-                blockController.PlaceLast(Block.PlaceType.None, _lastPlacedPos[0], _lastPlacedPos[1]);
+                _blockController.PlaceLast(Block.PlaceType.None, _lastPlacedPos[0], _lastPlacedPos[1]);
                 _placeboard[_lastPlacedPos[0], _lastPlacedPos[1]] = PlacedType.None;
             }
             
             // 새로운 최근 착수지점 업데이트
-            blockController.PlaceLast(Block.PlaceType.Last, row, col);
+            _blockController.PlaceLast(Block.PlaceType.Last, row, col);
             _placeboard[row, col] = PlacedType.Placed;
             
             //마지막 착수지점 갱신
@@ -225,20 +151,20 @@ public class GameManager : Singleton<GameManager>
             _board[row, col] = playerType;
             
             // X 마커 표시
-            blockController.PlaceMarker(Block.MarkerType.white, row, col);
+            _blockController.PlaceMarker(Block.MarkerType.white, row, col);
             
-            blockController.PlaceAim(Block.AimType.None, row, col);
+            _blockController.PlaceAim(Block.AimType.None, row, col);
             _aimboard[row, col] = AimedType.None;
             
             // 기존 최근 착수지점을 지우기
             if (_lastPlacedPos[0] != -1 && _lastPlacedPos[1] != -1)
             {
-                blockController.PlaceLast(Block.PlaceType.None, _lastPlacedPos[0], _lastPlacedPos[1]);
+                _blockController.PlaceLast(Block.PlaceType.None, _lastPlacedPos[0], _lastPlacedPos[1]);
                 _placeboard[_lastPlacedPos[0], _lastPlacedPos[1]] = PlacedType.None;
             }
             
             // 새로운 최근 착수지점 업데이트
-            blockController.PlaceLast(Block.PlaceType.Last, row, col);
+            _blockController.PlaceLast(Block.PlaceType.Last, row, col);
             
             //마지막 착수지점 갱신
             _lastPlacedPos[0] = row;
@@ -255,7 +181,7 @@ public class GameManager : Singleton<GameManager>
     /// 게임 결과 확인 함수
     /// </summary>
     /// <returns>플레이어 기준 게임 결과</returns>
-    private GameResult CheckGameResult(int row, int col, PlayerType playerType)
+    public GameResult CheckGameResult(int row, int col, PlayerType playerType)
     {
         if (playerType == PlayerType.Black)
         {
@@ -266,7 +192,7 @@ public class GameManager : Singleton<GameManager>
         if (playerType == PlayerType.White)
         {
             //백돌이 이겼다면 Lose 반환
-            if (ISFive(row, col, PlayerType.White)) { return GameResult.Lose; }
+            if (ISFive(row, col, PlayerType.White) || ISSix(row, col, PlayerType.White)) { return GameResult.Lose; }
         }
         
         //모든 칸이 채워졌다면 Draw 반환
@@ -294,6 +220,12 @@ public class GameManager : Singleton<GameManager>
         }
         return true;
     }
+
+    public PlayerType GetCurrentPlayer()
+    {
+        return _currentPlayer;
+    }
+    
     
     //보드범위체크 메서드
     private bool CheckBoardRange(int row, int col)
@@ -331,7 +263,7 @@ public class GameManager : Singleton<GameManager>
     }
 
     //금수 확인 메서드
-    private void Renju(int row, int col, PlayerType playerType)
+    public void Renju(int row, int col, PlayerType playerType)
     {
         for (int i = 0; i < 8; i++)
         {
@@ -557,7 +489,7 @@ public class GameManager : Singleton<GameManager>
     }
     
     //실제로 금수자리를 표시하는 메서드
-    private void PlacedBan()
+    public void PlacedBan()
     {
         //임시 큐 생성
         Queue<int[]> tempqueue = new Queue<int[]>();
@@ -575,7 +507,7 @@ public class GameManager : Singleton<GameManager>
                     _board[current[0], current[1]] = PlayerType.Ban;
                     
                     // 밴 마커 표시
-                    blockController.PlaceMarker(Block.MarkerType.ban, current[0], current[1]);
+                    _blockController.PlaceMarker(Block.MarkerType.ban, current[0], current[1]);
                 
                     tempqueue.Enqueue(new int[] {current[0], current[1]});
                 }
@@ -586,7 +518,7 @@ public class GameManager : Singleton<GameManager>
     }
 
     //금수 제거 메서드
-    private void ReplacedBan()
+    public void ReplacedBan()
     {
         //디큐하지않고 금수리스트를 순회
         foreach (var pos in banposQueue)
@@ -595,7 +527,7 @@ public class GameManager : Singleton<GameManager>
             _board[pos[0], pos[1]] = PlayerType.None;
             
             // 마커도 해제
-            blockController.PlaceMarker(Block.MarkerType.None, pos[0], pos[1]);
+            _blockController.PlaceMarker(Block.MarkerType.None, pos[0], pos[1]);
         }
     }
     
@@ -604,7 +536,7 @@ public class GameManager : Singleton<GameManager>
     /// gameResult에 따라 결과 출력
     /// </summary>
     /// <param name="gameResult">win, lose, draw</param>
-    private void EndGame(GameResult gameResult)
+    public void EndGame(GameResult gameResult)
     {
         // TODO: 나중에 구현!!
         
@@ -642,5 +574,17 @@ public class GameManager : Singleton<GameManager>
     
     protected override void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        //로드된 씬의 정보가 "Game"이라면
+        if (scene.name == "Game")
+        {
+            //블록컨트롤러와 게임ui컨트롤러 오브젝트를 찾아서 참조변수에 할당
+            _blockController = GameObject.FindObjectOfType<BlockController>();
+
+            // 게임 시작 메서드 호출
+            StartGame();
+        }
+        
+        //캔버스 오브젝트를 찾아서 참조변수에 할당
+        _canvas = GameObject.FindObjectOfType<Canvas>();
     }
 }
