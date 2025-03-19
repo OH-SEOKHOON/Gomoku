@@ -11,6 +11,10 @@ public class GameManager : Singleton<GameManager>
 	//BlockController를 참조
     private BlockController _blockController;
     
+    // 게임 UI 참조
+    private GameUIController _gameUIController;
+    
+    // 캔버스 참조
     private Canvas _canvas;
     
     //Player를 저장할 열거형(이넘)변수
@@ -75,8 +79,12 @@ public class GameManager : Singleton<GameManager>
         // BlockController의 InitBlocks() 호출 → 블록들을 초기화하고 클릭 이벤트 설정
         _blockController.InitBlocks();
         
-        //SetTurn(TurnType.흑돌) 호출 → 흑돌의 차례로 설정
+        //흑돌의 차례로 설정
         _currentPlayer = PlayerType.Black;
+        
+        // Game UI도 흑돌 차례로 설정
+        _gameUIController.SetGameUIMode(GameUIController.GameUIMode.TurnB);
+        
         SetPlaced();
     }
     
@@ -195,18 +203,15 @@ public class GameManager : Singleton<GameManager>
             if (ISFive(row, col, PlayerType.White) || ISSix(row, col, PlayerType.White)) { return GameResult.Lose; }
         }
         
-        //모든 칸이 채워졌다면 Draw 반환
-        if (IsAllBlocksPlaced()) { return GameResult.Draw; }
-        
         //다 아니라면 계속 게임진행중이라고 판단
         return GameResult.None;
     }
-    
+
     /// <summary>
     /// 모든 마커가 보드에 배치 되었는지 확인하는 함수
     /// </summary>
     /// <returns>True: 모두 배치</returns>
-    private bool IsAllBlocksPlaced()
+    public void IsAllBlocksPlaced()
     {
         //이중 for문으로 보드배열을 순회
         for (var row = 0; row < _board.GetLength(0); row++)
@@ -215,10 +220,11 @@ public class GameManager : Singleton<GameManager>
             {
                 //하나라도 none이라면
                 if (_board[row, col] == PlayerType.None || _board[row, col] == PlayerType.Ban)
-                    return false; //false를 반환
+                    return;
             }
         }
-        return true;
+        
+        EndGame(GameResult.Draw);
     }
 
     public PlayerType GetCurrentPlayer()
@@ -579,6 +585,8 @@ public class GameManager : Singleton<GameManager>
         {
             //블록컨트롤러와 게임ui컨트롤러 오브젝트를 찾아서 참조변수에 할당
             _blockController = GameObject.FindObjectOfType<BlockController>();
+            
+            _gameUIController = GameObject.FindObjectOfType<GameUIController>();
 
             // 게임 시작 메서드 호출
             StartGame();
