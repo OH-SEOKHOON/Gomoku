@@ -59,6 +59,9 @@ public class GameUIController : MonoBehaviour
                 
                 canvasGroupB.alpha = EnableAlpha;
                 canvasGroupW.alpha = EnableAlpha;
+                
+                _timer.InitTimer();
+                
                 break;
         }
     }
