@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 //싱글톤 패턴
 public class GameManager : Singleton<GameManager>
@@ -12,7 +13,11 @@ public class GameManager : Singleton<GameManager>
     //참조변수를 설정
     [SerializeField] private GameObject settingsPanel;
     [SerializeField] private GameObject confirmPanel;
+    [SerializeField] private GameObject profileselectPanel;
     
+    //프로필 영역
+    [SerializeField] private Image _profileImage;
+    [SerializeField] private Sprite[] _profileImages;
     
 	//BlockController를 참조
     private BlockController _blockController;
@@ -646,6 +651,11 @@ public class GameManager : Singleton<GameManager>
             // 게임 시작 메서드 호출
             StartGame();
         }
+
+        if (scene.name == "Main")
+        {
+            ChangeToProfile();
+        }
         
         //캔버스 오브젝트를 찾아서 참조변수에 할당
         _canvas = GameObject.FindObjectOfType<Canvas>();
@@ -697,5 +707,24 @@ public class GameManager : Singleton<GameManager>
             Debug.Log("캔버스가 null입니다");
         }
     }
-    
+
+    public void OpenProfileSlectPanel()
+    {
+        //캔버스가 할당되어 있다면
+        if (_canvas != null)
+        {
+            //_canvas(UI의 부모) 아래에 settingsPanel을 생성하여 변수에 할당
+            var profileslectPanelObject = Instantiate(profileselectPanel, _canvas.transform);
+            
+            //변수의 ProfileSelcectPanelController컴포넌트를 가져와 Show()를 호출해 패널을 활성화
+            profileslectPanelObject.GetComponent<ProfileSelcectPanelController>().Show();
+        }
+        else 
+            Debug.Log("캔버스가 null입니다");
+    }
+
+    public void ChangeToProfile()
+    {
+        _profileImage.sprite = _profileImages[UserInformations.ProfileIndex];
+    }
 }

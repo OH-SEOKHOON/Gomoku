@@ -2,12 +2,22 @@ using UnityEngine;
 
 public static class UserInformations
 {
+    private const string NICKNAME = "Nickname";
+    private const string PROFILEINDEX = "ProfileIndex";
     private const string CREDITS = "Credits";
     private const string RANKPOINTS = "Rankpoints";
-    private const string PROFILEINDEX = "ProfileIndex";
+    
     private const string BGMVOL = "BGMVol";
     private const string SFXVOL = "SFXVol";
 
+    public static string Nickname
+    {
+        get
+        { return PlayerPrefs.GetString(NICKNAME, "홍길동"); }
+        set
+        { PlayerPrefs.SetString(NICKNAME, value); }
+    }
+    
     // 크레딧
     public static int Credits
     {
