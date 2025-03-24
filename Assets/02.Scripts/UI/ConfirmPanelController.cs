@@ -3,29 +3,31 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UIElements;
 
-
-//PanelController를 상속
 public class ConfirmPanelController : PanelController
 {
-    //확인창에 표시될 메시지를 담을 tmp_text오브젝트
     [SerializeField] private TMP_Text messageText;
+    
+    [SerializeField] private GameObject closebutton;
 
-    //확인 버튼이 클릭되었을 때 실행될 함수를 저장할 델리게이트 선언
     public delegate void OnConfirmButtonClick();
     private OnConfirmButtonClick onConfirmButtonClick;
 
-    //이 패널이 보여질때 실행될 메서드, PanelController의 Show()랑 다른것(오버라이딩 아님!!)
-    public void Show(string message, OnConfirmButtonClick onConfirmButtonClick, OnHide onHide)
+    //프리팹화 시킴에 따라 onHide 델리게이트 함수가 필요없으므로 삭제
+    //(아까 패널 컨트롤러 스크립트에서도 지웠음)
+    public void Show(string message, OnConfirmButtonClick onConfirmButtonClick, bool isshowclose = true)
     {
-        //전달된 메시지를 UI 텍스트에 표시
         messageText.text = message;
-        
-        //확인 버튼 클릭 시 실행할 델리게이트에 파라미터로 받은 메서드 저장
         this.onConfirmButtonClick = onConfirmButtonClick;
+
+        if (!isshowclose)
+            closebutton.SetActive(false);
         
-        //부모오브젝트의 show메서드 실행
-        base.Show(onHide);
+        //부모 클래스(PanelController)의 Show() 실행
+        base.Show();
+        
+        
     }
     
     /// <summary>
@@ -33,9 +35,9 @@ public class ConfirmPanelController : PanelController
     /// </summary>
     public void OnClickConfirmButton()
     {
-        //저장된 델리게이트 함수를 실행하고 숨김처리
-        onConfirmButtonClick?.Invoke();
-        Hide();
+        //Hide()메서드 실행후,
+        //확인 버튼을 눌렀을 때 실행할 콜백(delegate) 정의.
+        Hide(() => onConfirmButtonClick?.Invoke());
     }
 
     /// <summary>
@@ -43,7 +45,6 @@ public class ConfirmPanelController : PanelController
     /// </summary>
     public void OnClickCloseButton()
     {
-        //뭐 없이 바로 숨김
         Hide();
     }
 }

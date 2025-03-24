@@ -1,12 +1,15 @@
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UIElements;
 
 public class Block : MonoBehaviour
 {
 	//돌에 쓸 스프라이트를 참조할 변수
     [SerializeField] private Sprite black;
+    [SerializeField] private Sprite blackwin;
     [SerializeField] private Sprite white;
+    [SerializeField] private Sprite whitewin;
     [SerializeField] private Sprite ban;
     
     //돌이 그려질 스프라이트 렌더러 컴포넌트
@@ -26,7 +29,7 @@ public class Block : MonoBehaviour
     
 
 	//마커타입 enum변수. 마커없음, 흑, 백 타입으로 나뉨
-    public enum MarkerType { None, black, white, ban }
+    public enum MarkerType { None, black, blackwin, white, whitewin, ban }
     
     //조준점타입 enum 변수. 조준점 없음, 조준점, 최근 착수
     public enum AimType { None, Aimed }
@@ -43,6 +46,8 @@ public class Block : MonoBehaviour
     
     //블록의 고유 인덱스를 저장하는 변수
     private int _blockIndex;
+    
+    public Vector3 position;
     
     /// <summary>
     /// Block 초기화 함수
@@ -65,6 +70,8 @@ public class Block : MonoBehaviour
         
         //전달받은 onBlockClicked 델리게이트를 클래스의 onBlockClicked 변수에 저장
         this.onBlockClicked = onBlockClicked;
+        
+        position = this.transform.position;
     }
     
     /// <summary>
@@ -80,10 +87,18 @@ public class Block : MonoBehaviour
             case MarkerType.black:
                 stoneSpriteRenderer.sprite = black;
                 break;
+            
+            case MarkerType.blackwin:
+                stoneSpriteRenderer.sprite = blackwin;
+                break;
                 
             //마커타입이 x면 스프라이트를 o로 변환.
             case MarkerType.white:
                 stoneSpriteRenderer.sprite = white;
+                break;
+            
+            case MarkerType.whitewin:
+                stoneSpriteRenderer.sprite = whitewin;
                 break;
             
             case MarkerType.ban:

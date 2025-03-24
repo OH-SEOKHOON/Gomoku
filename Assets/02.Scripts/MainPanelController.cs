@@ -1,13 +1,22 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class MainPanelController : MonoBehaviour
 {
+    [SerializeField] TMP_Text creditsText;
+    
+    private void Start()
+    {
+        creditsText.text = "Credits: " + UserInformations.Credits;
+    }
+
     public void OnClickPlayButton()
     {
-        SceneManager.LoadScene("Game");
+        GameManager.Instance.ChangeToGameScene();
     }
     
     public void OnClickReplayButton()

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -14,6 +15,7 @@ public class BlockController : MonoBehaviour
     //OnBlockClickedDelegate는 OnBlockClicked 타입의 델리게이트 변수
     public OnBlockClicked OnBlockClickedDelegate;
     
+
     public void InitBlocks()
     {
         //보드 만들기
@@ -71,5 +73,21 @@ public class BlockController : MonoBehaviour
         var lastIndex = row * 15 + col;
         
         blocks[lastIndex].SetLast(placedType);
+    }
+    
+    public void PlaceLine(Block.MarkerType markerType, List<int[]> wonlist)
+    {
+        
+        if (wonlist == null || wonlist.Count == 0)
+        {
+            Debug.Log("빈 리스트입니다.");
+            return;
+        }
+
+        for (int i = 0; i < wonlist.Count; i++)
+        {
+            var index = wonlist[i][0] * 15 + wonlist[i][1];
+            blocks[index].SetMarker(markerType);
+        }
     }
 }

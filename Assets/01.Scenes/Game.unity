@@ -457,6 +457,18 @@ PrefabInstance:
       value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 2342101185675989310, guid: 4fbe8a4ae9aa11547a86d72ac8410ca9, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2342101185675989310, guid: 4fbe8a4ae9aa11547a86d72ac8410ca9, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2342101185675989310, guid: 4fbe8a4ae9aa11547a86d72ac8410ca9, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2342101185675989310, guid: 4fbe8a4ae9aa11547a86d72ac8410ca9, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
@@ -504,17 +516,21 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2342101185675989310, guid: 4fbe8a4ae9aa11547a86d72ac8410ca9, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2982274635342199529, guid: 4fbe8a4ae9aa11547a86d72ac8410ca9, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 13
+      value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 2982274635342199529, guid: 4fbe8a4ae9aa11547a86d72ac8410ca9, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 13
+      value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 2982274635342199529, guid: 4fbe8a4ae9aa11547a86d72ac8410ca9, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -52
+      value: -50
       objectReference: {fileID: 0}
     - target: {fileID: 4301087565125222853, guid: 4fbe8a4ae9aa11547a86d72ac8410ca9, type: 3}
       propertyPath: m_Name
@@ -522,39 +538,39 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6603119032713263140, guid: 4fbe8a4ae9aa11547a86d72ac8410ca9, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 13
+      value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 6603119032713263140, guid: 4fbe8a4ae9aa11547a86d72ac8410ca9, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 13
+      value: 25
       objectReference: {fileID: 0}
     - target: {fileID: 6603119032713263140, guid: 4fbe8a4ae9aa11547a86d72ac8410ca9, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -52
+      value: -50
       objectReference: {fileID: 0}
     - target: {fileID: 6889521065145136044, guid: 4fbe8a4ae9aa11547a86d72ac8410ca9, type: 3}
       propertyPath: m_fontSize
-      value: 32
+      value: 72
       objectReference: {fileID: 0}
     - target: {fileID: 6889521065145136044, guid: 4fbe8a4ae9aa11547a86d72ac8410ca9, type: 3}
       propertyPath: m_fontSizeBase
-      value: 32
+      value: 72
       objectReference: {fileID: 0}
     - target: {fileID: 8121968589411846822, guid: 4fbe8a4ae9aa11547a86d72ac8410ca9, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 100
+      value: 200
       objectReference: {fileID: 0}
     - target: {fileID: 8121968589411846822, guid: 4fbe8a4ae9aa11547a86d72ac8410ca9, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 100
+      value: 200
       objectReference: {fileID: 0}
     - target: {fileID: 8363077328815380445, guid: 4fbe8a4ae9aa11547a86d72ac8410ca9, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 100
+      value: 200
       objectReference: {fileID: 0}
     - target: {fileID: 8363077328815380445, guid: 4fbe8a4ae9aa11547a86d72ac8410ca9, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 100
+      value: 200
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -705,7 +721,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uCC29\uC218"
+  m_text: "\uD751 \uCC29\uC218"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ed7b316a73e8f63468bc95d654f9b0e8, type: 2}
   m_sharedMaterial: {fileID: -8314209972279587663, guid: ed7b316a73e8f63468bc95d654f9b0e8, type: 2}
@@ -1748,6 +1764,7 @@ MonoBehaviour:
   canvasGroupB: {fileID: 681826420}
   canvasGroupW: {fileID: 1574023386}
   _timer: {fileID: 1700435202}
+  _SetbuttonText: {fileID: 647813198}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

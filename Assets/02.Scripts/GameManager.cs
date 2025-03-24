@@ -8,6 +8,12 @@ using UnityEngine.SceneManagement;
 //싱글톤 패턴
 public class GameManager : Singleton<GameManager>
 {
+    //이제 ui프리팹 생성을 게임매니저가 하게 되므로 인스펙터에서 지정하기위해
+    //참조변수를 설정
+    [SerializeField] private GameObject settingsPanel;
+    [SerializeField] private GameObject confirmPanel;
+    
+    
 	//BlockController를 참조
     private BlockController _blockController;
     
@@ -27,7 +33,7 @@ public class GameManager : Singleton<GameManager>
     public enum PlacedType { None, Placed };
     
     //오목 보드 배열
-    private PlayerType[,] _board;
+    public PlayerType[,] _board;
     
     //조준 보드 배열
     private AimedType[,] _aimboard;
@@ -36,13 +42,13 @@ public class GameManager : Singleton<GameManager>
     private PlacedType[,] _placeboard;
     
     //현재 플레이어를 저장할 변수
-    public PlayerType _currentPlayer;
+    [HideInInspector] public PlayerType _currentPlayer;
     
     //현재 위치를 저장할 변수
-    public int[] _lastPos = {-1, -1};
+    [HideInInspector] public int[] _lastPos = {-1, -1};
     
     //마지막 착수지점을 저장할 변수
-    public int[] _lastPlacedPos = {-1, -1};
+    [HideInInspector] public int[] _lastPlacedPos = {-1, -1};
 
 	//게임의 상태(진행 중, 승리, 패배, 무승부)를 나타내는 열거형
     public enum GameResult
@@ -57,8 +63,8 @@ public class GameManager : Singleton<GameManager>
     private Queue<int[]> banposQueue = new Queue<int[]>();
     
     //탐색할 방향 (가로, 세로, 대각선)
-    private int[] dx = { 1, -1, 0, 0, 1, -1, 1, -1 };
-    private int[] dy = { 0, 0, 1, -1, 1, -1, -1, 1 };
+    [HideInInspector] public int[] dx = { 1, -1, 0, 0, 1, -1, 1, -1 };
+    [HideInInspector] public int[] dy = { 0, 0, 1, -1, 1, -1, -1, 1 };
     
     
     /// <summary>
@@ -194,13 +200,23 @@ public class GameManager : Singleton<GameManager>
         if (playerType == PlayerType.Black)
         {
             //흑돌이 이겼다면 Win 반환
-            if (ISFive(row, col, PlayerType.Black)) { return GameResult.Win; }
+            if (ISFive(row, col, PlayerType.Black))
+            {
+                var wonlist = WinPos(row, col, playerType);
+                _blockController.PlaceLine(Block.MarkerType.blackwin, wonlist);
+                return GameResult.Win;
+            }
         }
 
         if (playerType == PlayerType.White)
         {
             //백돌이 이겼다면 Lose 반환
-            if (ISFive(row, col, PlayerType.White) || ISSix(row, col, PlayerType.White)) { return GameResult.Lose; }
+            if (ISFive(row, col, PlayerType.White) || ISSix(row, col, PlayerType.White))
+            {
+                var wonlist = WinPos(row, col, playerType);
+                _blockController.PlaceLine(Block.MarkerType.whitewin, wonlist);
+                return GameResult.Lose;
+            }
         }
         
         //다 아니라면 계속 게임진행중이라고 판단
@@ -234,7 +250,7 @@ public class GameManager : Singleton<GameManager>
     
     
     //보드범위체크 메서드
-    private bool CheckBoardRange(int row, int col)
+    public bool CheckBoardRange(int row, int col)
     {
         return (row < 0 || row >= 15 || col < 0 || col >= 15);
     }
@@ -327,7 +343,7 @@ public class GameManager : Singleton<GameManager>
     }
     
     //게임의 승패를 판단하는 메서드 (돌 5섯개를 검사)
-    private bool ISFive(int row, int col, PlayerType playerType)
+    public bool ISFive(int row, int col, PlayerType playerType)
     {
         for (int i = 0; i < 4; i++)
         {
@@ -337,8 +353,44 @@ public class GameManager : Singleton<GameManager>
         return false;
     }
     
+    //이긴 돌의 좌표들을 받아오는 메서드
+    private List<int[]> WinPos(int row, int col, PlayerType playerType)
+    {
+        List<int[]> _wonPos = new List<int[]>();
+        
+        for (int i = 0; i < 4; i++)
+        {
+            _wonPos.Clear();
+            _wonPos.Add(new[] { row, col });
+            
+            for (int j = 0; j < 2; j++)
+            {
+                int dirx = dx[i * 2 + j];
+                int diry = dy[i * 2 + j];
+            
+                int newRow = row;
+                int newCol = col;
+            
+                while (true)
+                {
+                    newRow += diry;
+                    newCol += dirx;
+                    
+                    if (CheckBoardRange(newRow, newCol) || _board[newRow, newCol] != playerType)
+                        break;
+                    
+                    _wonPos.Add(new[] { newRow, newCol });
+
+                    if (_wonPos.Count == 5)
+                        return _wonPos;
+                }
+            }
+        }
+        return null;
+    }
+    
     //장목 판단 메서드
-    private bool ISSix(int row, int col, PlayerType playerType)
+    public bool ISSix(int row, int col, PlayerType playerType)
     {
         for (int i = 0; i < 4; i++)
         {
@@ -348,7 +400,7 @@ public class GameManager : Singleton<GameManager>
         return false;
     }
 
-    private int[] FindEmptyPos(int row, int col, PlayerType playerType, int direction)
+    public int[] FindEmptyPos(int row, int col, PlayerType playerType, int direction)
     {
         int dirx = dx[direction];
         int diry = dy[direction];
@@ -372,7 +424,7 @@ public class GameManager : Singleton<GameManager>
         return null;
     }
 
-    private bool ISOpenThree(int row, int col, PlayerType playerType, int direction)
+    public bool ISOpenThree(int row, int col, PlayerType playerType, int direction)
     {
         for (int i = 0; i < 2; i++)
         {
@@ -397,7 +449,7 @@ public class GameManager : Singleton<GameManager>
         return false;
     }
     
-    private int CountOpenFour(int row, int col, PlayerType playerType, int direction)
+    public int CountOpenFour(int row, int col, PlayerType playerType, int direction)
     {
         if (ISFive(row, col, playerType))
             return -1;
@@ -428,7 +480,7 @@ public class GameManager : Singleton<GameManager>
         return count;
     }
 
-    private bool ISDoubleThree(int row, int col, PlayerType playerType)
+    public bool ISDoubleThree(int row, int col, PlayerType playerType)
     {
         int count = 0;
         
@@ -448,7 +500,7 @@ public class GameManager : Singleton<GameManager>
         return false;
     }
 
-    private bool ISDoubleFour(int row, int col, PlayerType playerType)
+    public bool ISDoubleFour(int row, int col, PlayerType playerType)
     {
         int count = 0;
         
@@ -470,7 +522,7 @@ public class GameManager : Singleton<GameManager>
         return false;
     }
 
-    private bool ISFour(int row, int col, PlayerType playerType, int direction)
+    public bool ISFour(int row, int col, PlayerType playerType, int direction)
     {
         for (int i = 0; i < 2; i++)
         {
@@ -549,13 +601,16 @@ public class GameManager : Singleton<GameManager>
         switch (gameResult)
         {
             case GameResult.Win:
-                Debug.Log("Player B win");
+                Debug.Log("흑돌 우승");
+                OpenConfirmPanel("흑돌 우승!", () => ChangeToMainScene(), false);
                 break;
             case GameResult.Lose:
-                Debug.Log("Player W win");
+                Debug.Log("백돌 우승");
+                OpenConfirmPanel("백돌 우승!", () => ChangeToMainScene(), false);
                 break;
             case GameResult.Draw:
-                Debug.Log("Draw");
+                Debug.Log("무승부");
+                OpenConfirmPanel("무승부", () => ChangeToMainScene(), false);
                 break;
         }
     }
@@ -595,4 +650,52 @@ public class GameManager : Singleton<GameManager>
         //캔버스 오브젝트를 찾아서 참조변수에 할당
         _canvas = GameObject.FindObjectOfType<Canvas>();
     }
+    
+    public void ChangeToGameScene()
+    {
+        SceneManager.LoadScene("Game");
+    }
+
+    //메인 씬으로 이동하게 만드는 메서드
+    public void ChangeToMainScene()
+    {
+        SceneManager.LoadScene("Main");
+    }
+	
+    //세팅패널을 여는 메서드
+    public void OpenSettingsPanel()
+    {
+        //캔버스가 할당되어 있다면
+        if (_canvas != null)
+        {
+            //_canvas(UI의 부모) 아래에 settingsPanel을 생성하여 변수에 할당
+            var settingsPanelObject = Instantiate(settingsPanel, _canvas.transform);
+            
+            //변수의 PanelController컴포넌트를 가져와 Show()를 호출해 패널을 활성화
+            settingsPanelObject.GetComponent<PanelController>().Show();
+        }
+        else 
+            Debug.Log("캔버스가 null입니다");
+    }
+
+    //컨펌패널을 여는 메서드
+    public void OpenConfirmPanel(string message, ConfirmPanelController.OnConfirmButtonClick onConfirmButtonClick, bool isshowclose = true)
+    {
+        //캔버스가 할당되어 있다면
+        if (_canvas != null)
+        {
+            //_canvas(UI의 부모) 아래에 confirmPanel을 생성하여 변수에 할당
+            var confirmPanelObject = Instantiate(confirmPanel, _canvas.transform);
+            
+            //변수의 ConfirmPanelController컴포넌트를 가져와 .Show(message, onConfirmButtonClick)를
+            //호출해 패널을 활성화
+            confirmPanelObject.GetComponent<ConfirmPanelController>()
+                .Show(message, onConfirmButtonClick, isshowclose);
+        }
+        else
+        {
+            Debug.Log("캔버스가 null입니다");
+        }
+    }
+    
 }

@@ -399,10 +399,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   black: {fileID: 21300000, guid: 6d8a7e102554d944ca5e017c3ed056a1, type: 3}
+  blackwin: {fileID: 21300000, guid: 94c8daa227663cb4aabcab72fb70960b, type: 3}
   white: {fileID: 21300000, guid: f180acd9eded0b5449809ced9450c909, type: 3}
+  whitewin: {fileID: 21300000, guid: 47f4d9e35360eb04e8099469af476eec, type: 3}
   ban: {fileID: 21300000, guid: 9ad8fb7e55b791f4495ad6827caab3b5, type: 3}
   stoneSpriteRenderer: {fileID: 7332395249564184886}
   aimSpriteRenderer: {fileID: 7433632134969253110}
   lastPosSpriteRenderer: {fileID: 8436696967349100474}
   aimed: {fileID: 21300000, guid: 76dbcf84adff67d46b54cf5e9aad73d0, type: 3}
   lastpos: {fileID: 21300000, guid: a33b0f96583f97f4795474c4f2c52f39, type: 3}
+  position: {x: 0, y: 0, z: 0}

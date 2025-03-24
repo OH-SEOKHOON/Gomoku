@@ -2,48 +2,64 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening; //가벼운 애니메이션을 적용시켜주는 외부 에셋.
 
-[RequireComponent(typeof(RectTransform))]
+//캔버스 그룹을 반드시 요구, 없을시 자동 추가
+[RequireComponent(typeof(CanvasGroup))]
 public class PanelController : MonoBehaviour
 {
-    public bool IsShow { get; private set; }
+    [SerializeField] private RectTransform panelRectTransform;      // 팝업창
     
-    //hide메서드를 델리게이트 변수에 집어넣기위해 델리게이트 선언을 한다.
-    public delegate void OnHide();
-    private OnHide _onHideDelegate;
+    private CanvasGroup _backgroundCanvasGroup;                     // 뒤에 시커먼 배경
     
-    private RectTransform _rectTransform;
-    private Vector2 _hideAnchorPosition;
-
-    //start함수를 awake로 변경
+    
+    //델리게이트 타입 선언. 패널을 숨길때 실행할 함수
+    public delegate void PanelControllerHideDelegate();
+    
     private void Awake()
     {
-        _rectTransform = GetComponent<RectTransform>();
-        _hideAnchorPosition = _rectTransform.anchoredPosition;
-        IsShow = false;
+    	//게임 오브젝트가 생성될 때 CanvasGroup 컴포넌트를 가져와
+        //_backgroundCanvasGroup 변수에 저장
+        _backgroundCanvasGroup = GetComponent<CanvasGroup>();
     }
 
     /// <summary>
     /// Panel 표시 함수
     /// </summary>
-    public void Show(OnHide onHideDelegate)
+    public void Show()
     {
-        //선언했던 델리게이트함수에 파라미터로 받은 onHideDelegate함수 할당
-        _onHideDelegate = onHideDelegate;
+    	//패널투명도와 크기를 처음에 0으로 만들어 보이지 않게함 
+        _backgroundCanvasGroup.alpha = 0;
+        panelRectTransform.localScale = Vector3.zero;
         
-        _rectTransform.anchoredPosition = Vector2.zero;
-        IsShow = true;
+        //이후 투명도와 크기를 0.3초에 걸쳐 1로 만드는
+        //애니메이션 메서드 (DG.Tweening) 실행
+        _backgroundCanvasGroup.DOFade(1, 0.3f).SetEase(Ease.Linear);
+        panelRectTransform.DOScale(1, 0.3f).SetEase(Ease.OutBack);
     }
 
     /// <summary>
     /// Panel 숨기기 함수
     /// </summary>
-    public void Hide()
+    //'=null'을 넣어서 선택적으로 아까선언했던 델리게이트 타입의
+    //hideDelegate(콜백 함수)를 실행할 수 있음
+    public void Hide(PanelControllerHideDelegate hideDelegate = null)
     {
-        _rectTransform.anchoredPosition = _hideAnchorPosition;
-        IsShow = false;
+    	//처음에 패널투명도와 크기를 1로 만들어 보이게 함
+        _backgroundCanvasGroup.alpha = 1;
+        panelRectTransform.localScale = Vector3.one;
         
-        //변수로 저장했던 델리게이트 함수 활성화
-        _onHideDelegate?.Invoke();
+        //이후 투명도와 크기를 0.3초에 걸쳐 0으로 만드는
+        //애니메이션 메서드 (DG.Tweening) 실행
+        _backgroundCanvasGroup.DOFade(0, 0.3f).SetEase(Ease.Linear);
+        panelRectTransform.DOScale(0, 0.3f)
+            .SetEase(Ease.InBack).OnComplete(() =>
+            {
+                hideDelegate?.Invoke();
+                Destroy(gameObject);
+            });
+            //.OnComplete(() => { ... })는 애니메이션이 끝난 후 특정 동작 실행하게함
+            //여기선 hideDelegate?.Invoke();로 델리게이트를 받으면 실행하고
+            //destroy로 삭제까지 함
     }
 }

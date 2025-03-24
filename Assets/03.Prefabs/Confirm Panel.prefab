@@ -821,6 +821,7 @@ GameObject:
   - component: {fileID: 6456515313260542517}
   - component: {fileID: 7407063518107754016}
   - component: {fileID: 662030849001787533}
+  - component: {fileID: 7764670949685527308}
   m_Layer: 5
   m_Name: Confirm Panel
   m_TagString: Untagged
@@ -845,7 +846,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 486}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6456515313260542517
@@ -898,4 +899,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 95cad9aa9c9598e418422eab38888797, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  messageText: {fileID: 0}
+  panelRectTransform: {fileID: 889700943902752053}
+  messageText: {fileID: 1687985321878800063}
+  closebutton: {fileID: 2885774554714790888}
+--- !u!225 &7764670949685527308
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8386122095523250780}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
