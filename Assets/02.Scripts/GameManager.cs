@@ -22,8 +22,9 @@ public class GameManager : Singleton<GameManager>
 	//BlockController를 참조
     private BlockController _blockController;
     
-    // 게임 UI 참조
+    // UI 참조
     [NonSerialized] public GameUIController _gameUIController;
+    [SerializeField] private MainPanelController _mainPanelController;
     
     // 캔버스 참조
     private Canvas _canvas;
@@ -654,7 +655,11 @@ public class GameManager : Singleton<GameManager>
 
         if (scene.name == "Main")
         {
-            ChangeToProfile();
+            // Main 씬의 UI 참조들을 다시 찾기
+            FindMainSceneReferences();
+        
+            // 한 프레임 대기 후 프로필 변경
+            StartCoroutine(DelayedChangeToProfile());
         }
         
         //캔버스 오브젝트를 찾아서 참조변수에 할당
@@ -670,6 +675,7 @@ public class GameManager : Singleton<GameManager>
     public void ChangeToMainScene()
     {
         SceneManager.LoadScene("Main");
+        _mainPanelController.InitMainPanel();
     }
 	
     //세팅패널을 여는 메서드
@@ -721,6 +727,28 @@ public class GameManager : Singleton<GameManager>
         }
         else 
             Debug.Log("캔버스가 null입니다");
+    }
+    
+    private void FindMainSceneReferences()
+    {
+        // Main 씬의 프로필 이미지를 다시 찾기
+        _profileImage = GameObject.Find("ProfileImage")?.GetComponent<Image>();
+        // 또는 태그나 다른 방법으로 찾기
+        // _profileImage = GameObject.FindWithTag("ProfileImage")?.GetComponent<Image>();
+    
+        // MainPanelController도 다시 찾기
+        _mainPanelController = GameObject.FindObjectOfType<MainPanelController>();
+    
+        if (_profileImage == null)
+        {
+            Debug.LogError("Main 씬에서 ProfileImage를 찾을 수 없습니다!");
+        }
+    }
+
+    private IEnumerator DelayedChangeToProfile()
+    {
+        yield return new WaitForEndOfFrame();
+        ChangeToProfile();
     }
 
     public void ChangeToProfile()

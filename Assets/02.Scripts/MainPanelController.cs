@@ -9,8 +9,13 @@ public class MainPanelController : MonoBehaviour
 {
     [SerializeField] TMP_Text creditsText;
     [SerializeField] TMP_Text nameText;
-    
+
     private void Start()
+    {
+        InitMainPanel();
+    }
+
+    public void InitMainPanel()
     {
         creditsText.text = "Credits: " + UserInformations.Credits;
         
