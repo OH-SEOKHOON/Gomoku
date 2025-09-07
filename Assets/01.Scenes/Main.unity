@@ -735,7 +735,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 95179694}
         m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: OpenProfileSlectPanel
+        m_MethodName: OpenProfileSelectPanel
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
