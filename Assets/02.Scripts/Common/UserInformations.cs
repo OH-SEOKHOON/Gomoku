@@ -30,7 +30,7 @@ public static class UserInformations
     // 랭크포인트
     public static int Rankpoints
     {
-        get { return PlayerPrefs.GetInt(RANKPOINTS, 3); }
+        get { return PlayerPrefs.GetInt(RANKPOINTS, 20); }
         set { PlayerPrefs.SetInt(RANKPOINTS, value); }
     }
     

@@ -97,6 +97,7 @@ public class GameUIController : MonoBehaviour
                                 GameManager.Instance._currentPlayer = GameManager.PlayerType.White;
                                 SetGameUIMode(GameUIMode.TurnW);
                                 _SetbuttonText.text = "백 착수";
+                                
                             }
                             else
                             {
@@ -113,47 +114,6 @@ public class GameUIController : MonoBehaviour
         
                     case GameManager.PlayerType.White:
                     {
-                        // var result = MinimaxAIController.GetBestMove(GameManager.Instance._board, 1, GameManager.Instance._lastPlacedPos[0], GameManager.Instance._lastPlacedPos[1]);
-                        //
-                        // if (result.HasValue)
-                        // {
-                        //     //마커 배치
-                        //     if (GameManager.Instance.SetNewBoardValue(GameManager.PlayerType.White, result.Value.row, result.Value.col))
-                        //     {
-                        //         var gameResult = GameManager.Instance.CheckGameResult(GameManager.Instance._lastPlacedPos[0], GameManager.Instance._lastPlacedPos[1], GameManager.PlayerType.White);
-                        //         
-                        //         if (gameResult == GameManager.GameResult.None)
-                        //         {
-                        //             //금수 배치
-                        //             GameManager.Instance.PlacedBan();
-                        //                      
-                        //             //보드가 꽉찼는지 확인
-                        //             GameManager.Instance.IsAllBlocksPlaced();
-                        //             
-                        //             //흑돌턴으로 넘김
-                        //             GameManager.Instance._currentPlayer = GameManager.PlayerType.Black;
-                        //             SetGameUIMode(GameUIMode.TurnB);
-                        //             _SetbuttonText.text = "착수";
-                        //         }
-                        //         else
-                        //         {
-                        //             SetGameUIMode(GameUIMode.GameOver);
-                        //             GameManager.Instance.EndGame(gameResult);
-                        //         }
-                        //             
-                        //     }
-                        //     else
-                        //     {
-                        //         Debug.Log("이미 둔곳입니다");
-                        //     }
-                        // }
-                        // //result변수가 null이라면
-                        // else
-                        // {
-                        //     //게임 끝냄
-                        //     GameManager.Instance.EndGame(GameManager.GameResult.Win);
-                        // }
-                        
                         if (GameManager.Instance.SetNewBoardValue(GameManager.PlayerType.White, GameManager.Instance._lastPos[0], GameManager.Instance._lastPos[1]))
                         {
                             var gameResult = GameManager.Instance.CheckGameResult(GameManager.Instance._lastPos[0], GameManager.Instance._lastPos[1], GameManager.PlayerType.White);

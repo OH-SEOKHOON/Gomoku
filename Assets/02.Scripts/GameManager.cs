@@ -23,7 +23,7 @@ public class GameManager : Singleton<GameManager>
     private BlockController _blockController;
     
     // 게임 UI 참조
-    private GameUIController _gameUIController;
+    [NonSerialized] public GameUIController _gameUIController;
     
     // 캔버스 참조
     private Canvas _canvas;
@@ -262,7 +262,7 @@ public class GameManager : Singleton<GameManager>
     
     
     //돌을 세는 메서드
-    private int GetCountStone(int row, int col, PlayerType playerType, int direction)
+    public int GetCountStone(int row, int col, PlayerType playerType, int direction)
     {
         int count = 1;
 
@@ -708,7 +708,7 @@ public class GameManager : Singleton<GameManager>
         }
     }
 
-    public void OpenProfileSlectPanel()
+    public void OpenProfileSelectPanel()
     {
         //캔버스가 할당되어 있다면
         if (_canvas != null)
